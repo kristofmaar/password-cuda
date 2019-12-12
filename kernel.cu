@@ -11,8 +11,9 @@
 #include "md5_gpu.cu"
 #include "md5.h"
 #include <fstream>
+#include <ctime>
 
-#define CONST_FILE_LENGTH 1000
+#define CONST_FILE_LENGTH 10000
 #define CONST_WORD_LENGTH_KRISTOF 5
 
 using namespace std;
@@ -44,6 +45,7 @@ __global__ void md5Crack(uint8_t wordLength, uint32_t hash01, uint32_t hash02, u
 
 int findHashCPU(string input[CONST_FILE_LENGTH], string inputHash)
 {
+	int found = 0;
 	for (unsigned int i = 0; i < CONST_FILE_LENGTH; i = i + 1)
 	{
 		string data = input[i];
@@ -51,24 +53,32 @@ int findHashCPU(string input[CONST_FILE_LENGTH], string inputHash)
 
 		MD5 hash;
 		if (inputHash == hash(data)) {
-			return i;
+			found = i;
 		}
 	}
-	return 0;
+	return found;
 }
 
 int main() {
-	/* password hash to find: andre*/
-	char passwordHash[33] = "19984dcaea13176bbb694f62ba6b5b35";
+	/* password hash to find: cattle*/
+	char passwordHash[33] = "bd5f4b0419caa97dd2f9b4d3238ff92f";
 
 	/* read text file to array*/
 	string wordsArray[CONST_FILE_LENGTH];
 	ifstream file("passwords.txt");
 	if (file.is_open()) for (int i = 0; i < CONST_FILE_LENGTH; ++i) file >> wordsArray[i];
 
-	/**/
+	/*CPU hash finder*/
+	std::clock_t c_start = std::clock();
+
 	int index = findHashCPU(wordsArray, passwordHash);
-	std::cout << "found index: " << index << std::endl;
+
+	std::clock_t c_end = std::clock();
+
+	double time_elapsed_ms = 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC;
+
+	std::cout << "CPU bruteforce:\n\cracked word: " << wordsArray[index] << std::endl;
+	std::cout << "\ttime used: " << time_elapsed_ms << " ms\n";
 
 	/* variable for hash stored as u32 integers */
 	uint32_t md5Hash[4];
@@ -106,10 +116,9 @@ int main() {
 	cudaEventSynchronize(clockLast);
 	cudaEventElapsedTime(&milliseconds, clockBegin, clockLast);
 
-	std::cout << "computation time: " << milliseconds << " ms" << std::endl;
-
 	cudaEventDestroy(clockBegin);
 	cudaEventDestroy(clockLast);
 
-	std::cout << "cracked word: " << g_cracked << std::endl;
+	std::cout << "\nGPU bruteforce:\n\tcracked word: " << g_cracked << std::endl;
+	std::cout << "\tcomputation time: " << milliseconds << " ms" << std::endl;
 }
