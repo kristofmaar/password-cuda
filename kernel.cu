@@ -68,8 +68,8 @@ int findHashCPU(string input[CONST_FILE_LENGTH], string inputHash)
 }
 
 int main() {
-	/* password hash to find: 06041992, 20000*/
-	char passwordHash[33] = "f439a66cf295371bd7b674ef571e8815";
+	/* password hash to find: megvan, 20000.*/
+	char passwordHash[33] = "d52555768d6044b61ae912e13b26f8c6";
 
 	/* read text file to array*/
 	string wordsArray[CONST_FILE_LENGTH];
@@ -87,7 +87,7 @@ int main() {
 	double time_elapsed_ms = 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC;
 
 	std::cout << "CPU bruteforce:\n\t\cracked word: " << wordsArray[index] << std::endl;
-	std::cout << "\ttime used: " << time_elapsed_ms << " ms\n";
+	std::cout << "\ttime elapsed: " << time_elapsed_ms << " ms\n";
 
 
 
@@ -128,7 +128,7 @@ int main() {
 	cudaEventCreate(&clockLast);
 	cudaEventRecord(clockBegin, 0);
 
-	md5Crack <<< 40, 500 >>> (md5Hash[0], md5Hash[1], md5Hash[2], md5Hash[3]);
+	md5Crack <<< 40, 512 >>> (md5Hash[0], md5Hash[1], md5Hash[2], md5Hash[3]);
 
 	/* Copy result */
 	cudaMemcpyFromSymbol(g_cracked, g_deviceCracked, sizeof(uint8_t) * CONST_WORD_MAX_LENGTH, 0, cudaMemcpyDeviceToHost);
@@ -142,5 +142,5 @@ int main() {
 	cudaEventDestroy(clockLast);
 
 	std::cout << "\nGPU bruteforce:\n\tcracked word: " << g_cracked << std::endl;
-	std::cout << "\tcomputation time: " << milliseconds << " ms" << std::endl;
+	std::cout << "\ttime elapsed: " << milliseconds << " ms" << std::endl;
 }
